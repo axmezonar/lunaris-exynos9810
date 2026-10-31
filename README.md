@@ -21,11 +21,11 @@ Unofficial device bring-up and build automation for the **Samsung Galaxy Note 9 
 - `scripts/verify-device-tree.sh`: validates expected source paths and product identifiers after sync.
 - `scripts/build-rom.sh`: runs the Lunaris lunch target and `m bacon`.
 - `scripts/build-from-github.sh`: one-command local source sync and ROM build.
-- `.github/workflows/build-rom.yml`: manual GitHub Actions build, logging, and ROM artifact upload.
+- `.github/workflows/build-rom.yml`: manual GitHub Actions build, ZIP integrity checks, SHA-256 generation, and prerelease publishing.
 - `PORT_STATUS.md`: verified baseline and remaining bring-up work.
 - `RUNNER_SETUP.md`: the one-time runner prerequisite.
 
-The Android source tree is fetched by `repo` at build time; it is not duplicated in this small configuration repository.
+The Android source tree is fetched by `repo` at build time; it is not duplicated in this small configuration repository. A lightweight validation workflow also checks shell syntax and manifest consistency on each push.
 
 ## Build from GitHub
 
@@ -48,7 +48,7 @@ Recommended machine:
 - 8+ CPU threads
 - Git, Git LFS, Python 3, curl, and Android build dependencies
 
-The workflow checks memory and disk before syncing. It uses `/srv/android/lunaris-exynos9810` as its persistent build workspace.
+The workflow checks memory and disk before syncing. It uses `/srv/android/lunaris-exynos9810` as its persistent build workspace. After a successful compile, it verifies the ZIP archive, generates SHA-256 checksums, splits oversized release assets safely, and publishes a GitHub prerelease. CI does not flash or boot-test the phone.
 
 **This is the one remaining infrastructure step outside this repository:** the runner must be installed and registered on a suitably provisioned machine. GitHub repository access does not provision compute or create the short-lived runner registration token. Until a matching runner is online, the build job will stay queued. Follow [RUNNER_SETUP.md](RUNNER_SETUP.md) or [GitHub's self-hosted runner guide](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners).
 
