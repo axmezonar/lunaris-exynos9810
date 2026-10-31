@@ -12,10 +12,16 @@ if [[ ! -f build/envsetup.sh ]]; then
   exit 1
 fi
 
+# Apply only the Lunaris-specific maintainer metadata; this is idempotent.
+bash "$ROOT/scripts/patch-lunaris-product.sh" "$ANDROID_ROOT"
+
+# Validate all pinned device, vendor, kernel, and SLSI dependencies.
 bash "$ROOT/scripts/verify-device-tree.sh" "$ANDROID_ROOT"
 
 source build/envsetup.sh
 lunch lineage_crownlte-bp4a-userdebug
+
+# Keep the full compiler output available for diagnosis.
 m bacon -j"$JOBS"
 
 OUT="$ANDROID_ROOT/out/target/product/crownlte"
