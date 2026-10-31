@@ -9,81 +9,81 @@
         name="ExyHyperBrick/android_device_samsung_crownlte"
         path="device/samsung/crownlte"
         remote="exyhyper"
-        revision="lineage-23.2" />
+        revision="460e64967b5194330025660861269ddccdbd6937" />
 
     <project
         name="ExyHyperBrick/android_device_samsung_exynos9810-common"
         path="device/samsung/exynos9810-common"
         remote="exyhyper"
-        revision="lineage-23.2" />
+        revision="6883bf869ddefa0c97cf64c708a6c2c850bbf501" />
 
     <!-- Exynos 9810 kernel -->
     <project
         name="ExyHyperBrick/android_kernel_samsung_exynos9810"
         path="kernel/samsung/exynos9810"
         remote="exyhyper"
-        revision="lineage-23.2" />
+        revision="baa585f67e0efc9f1efa046d0b0e76955ca4c8d5" />
 
     <!-- Proprietary vendor files -->
     <project
         name="ExyHyperBrick/proprietary_vendor_samsung_crownlte"
         path="vendor/samsung/crownlte"
         remote="exyhyper"
-        revision="lineage-23.2" />
+        revision="3a0da5dd265895280e8e4d0c25ef52387a296f26" />
 
     <project
         name="ExyHyperBrick/proprietary_vendor_samsung_exynos9810-common"
         path="vendor/samsung/exynos9810-common"
         remote="exyhyper"
-        revision="lineage-23.2" />
+        revision="8de5c7536e81ed78d33cc7f1f749f8872394db24" />
 
     <!-- Samsung hardware integration -->
     <project
         name="LineageOS/android_hardware_samsung"
         path="hardware/samsung"
         remote="lineageos"
-        revision="lineage-23.2" />
+        revision="9e095907956abc98cf94eab56dcdc1e40fc44642" />
 
     <project
         name="LineageOS/android_device_samsung_slsi_sepolicy"
         path="device/samsung_slsi/sepolicy"
         remote="lineageos"
-        revision="lineage-23.2" />
+        revision="2658c386ceb4f58e78fa0e985d9a8aec073972e7" />
 
     <!-- The SLSI config.mk explicitly exports all five namespaces below. -->
     <project
         name="ExyHyperBrick/android_hardware_samsung_slsi-linaro_config"
         path="hardware/samsung_slsi-linaro/config"
         remote="exyhyper"
-        revision="lineage-22.2" />
+        revision="32f5edbee218723bdf1d00794a2bc700187fce9d" />
 
     <project
         name="ExyHyperBrick/android_hardware_samsung_slsi-linaro_exynos"
         path="hardware/samsung_slsi-linaro/exynos"
         remote="exyhyper"
-        revision="lineage-23.2" />
+        revision="ab48fc5ba935eff13b856c0a75d09c74046be6a6" />
 
     <project
         name="LineageOS/android_hardware_samsung_slsi-linaro_exynos5"
         path="hardware/samsung_slsi-linaro/exynos5"
         remote="lineageos"
-        revision="lineage-23.2" />
+        revision="7a7c982313e0821898ef9c696d3e12da95cfe037" />
 
     <project
         name="ExyHyperBrick/android_hardware_samsung_slsi-linaro_graphics"
         path="hardware/samsung_slsi-linaro/graphics"
         remote="exyhyper"
-        revision="lineage-22.2" />
+        revision="5a904fc6e6943aa1ef002c5b3519ac0a70a8f086" />
 
     <project
         name="LineageOS/android_hardware_samsung_slsi-linaro_interfaces"
         path="hardware/samsung_slsi-linaro/interfaces"
         remote="lineageos"
-        revision="lineage-23.2" />
+        revision="a23ed82b3f3859aa9e0207036b0d0e98119b959b" />
 
     <project
         name="LineageOS/android_hardware_samsung_slsi-linaro_openmax"
         path="hardware/samsung_slsi-linaro/openmax"
         remote="lineageos"
-        revision="lineage-23.2" />
+        revision="15ab30812af9fe39fff2ae3cd867d7e954c73881" />
 </manifest>
