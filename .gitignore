@@ -1,0 +1,12 @@
+out/
+.repo/
+.cache/
+ccache/
+*.img
+*.zip
+*.tar
+*.log
+.env
+*.key
+*.pem
+credentials*
