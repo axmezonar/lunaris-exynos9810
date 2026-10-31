@@ -1,0 +1,123 @@
+name: Build Lunaris — crownlte
+
+on:
+  workflow_dispatch:
+    inputs:
+      clean_out:
+        description: "Delete the previous Android out/ directory before compiling"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lunaris-crownlte-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Lunaris 16.2 / SM-N960F
+    runs-on: [self-hosted, linux, x64, android-builder]
+    timeout-minutes: 360
+
+    env:
+      ANDROID_ROOT: /srv/android/lunaris-exynos9810
+      REPO_SYNC_JOBS: "4"
+      BUILD_JOBS: "8"
+
+    steps:
+      - name: Checkout build configuration
+        uses: actions/checkout@v4
+
+      - name: Check build host resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$ANDROID_ROOT"
+
+          mem_kb="$(awk '/MemTotal:/ {print $2}' /proc/meminfo)"
+          mem_gib="$((mem_kb / 1024 / 1024))"
+          free_bytes="$(df -PB1 "$ANDROID_ROOT" | awk 'END {print $4}')"
+          free_gib="$((free_bytes / 1024 / 1024 / 1024))"
+
+          echo "Available RAM: ${mem_gib} GiB"
+          echo "Available disk: ${free_gib} GiB"
+
+          if (( mem_gib < 58 )); then
+            echo "::error::At least 58 GiB RAM is required; 64 GiB is recommended."
+            exit 1
+          fi
+
+          if (( free_gib < 450 )); then
+            echo "::error::At least 450 GiB free disk is required for source and output."
+            exit 1
+          fi
+
+      - name: Install repo launcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/bin"
+          if [[ ! -x "$HOME/bin/repo" ]]; then
+            curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo"
+            chmod 0755 "$HOME/bin/repo"
+          fi
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          git lfs version
+
+      - name: Initialize Lunaris and sync crownlte sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$ANDROID_ROOT"
+
+          repo init \
+            -u https://github.com/Lunaris-AOSP/android \
+            -b 16.2 \
+            --git-lfs
+
+          mkdir -p .repo/local_manifests
+          install -m 0644 \
+            "$GITHUB_WORKSPACE/local_manifests/crownlte.xml" \
+            .repo/local_manifests/crownlte.xml
+
+          repo sync -c \
+            -j"$REPO_SYNC_JOBS" \
+            --force-sync \
+            --no-clone-bundle \
+            --no-tags
+
+      - name: Clean previous output if requested
+        if: ${{ inputs.clean_out }}
+        shell: bash
+        run: rm -rf "$ANDROID_ROOT/out"
+
+      - name: Build ROM
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd "$ANDROID_ROOT"
+          LOG="$GITHUB_WORKSPACE/lunaris-crownlte-build.log"
+          bash "$GITHUB_WORKSPACE/scripts/build-rom.sh" 2>&1 | tee "$LOG"
+
+      - name: Upload ROM artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lunaris-AOSP-SM-N960F-run-${{ github.run_number }}
+          path: |
+            /srv/android/lunaris-exynos9810/out/target/product/crownlte/*.zip
+            lunaris-crownlte-build.log
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build log after failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lunaris-AOSP-SM-N960F-failed-log-${{ github.run_number }}
+          path: lunaris-crownlte-build.log
+          if-no-files-found: ignore
+          retention-days: 7
