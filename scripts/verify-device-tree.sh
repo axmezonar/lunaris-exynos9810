@@ -105,6 +105,19 @@ if [[ -f "$COMMON_BOARD" ]]; then
     echo "ERROR: expected Samsung kernel image name is not configured"
     failed=1
   }
+  grep -q 'BOARD_MKBOOTIMG_ARGS := --header_version 0' "$COMMON_BOARD" || {
+    echo "ERROR: legacy Samsung boot header version 0 is not configured"
+    failed=1
+  }
+  grep -q 'BOARD_KERNEL_PAGESIZE := 2048' "$COMMON_BOARD" || {
+    echo "ERROR: expected 2048-byte Samsung boot page size is not configured"
+    failed=1
+  }
+
+  if grep -Eq 'BOARD_CUSTOM_BOOTIMG|BOARD_CUSTOM_BOOTIMG_MK|BOARD_KERNEL_SEPARATED_DT|TARGET_CUSTOM_DTBTOOL' "$COMMON_BOARD"; then
+    echo "ERROR: obsolete boot-image/DTB flags conflict with samsung_bootimg.py"
+    failed=1
+  fi
 fi
 
 if [[ -f "$KERNEL_CONFIG" ]]; then
