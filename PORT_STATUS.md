@@ -23,7 +23,7 @@ No compile has been executed from this repository. Therefore the following remai
 
 1. Sync the pinned source manifest.
 2. Run `scripts/verify-device-tree.sh`.
-3. Attempt `lunch lineage_crownlte-bp4a-userdebug`.
+3. Attempt `lunch lineage_crownlte-bp4a-user`.
 4. Resolve real Soong, Make, SELinux, VINTF, and kernel integration errors from the build log.
 5. Produce the ROM ZIP.
 6. Test on an SM-N960F with complete EFS/modem and user-data backups.
