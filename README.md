@@ -20,6 +20,7 @@ Unofficial device bring-up and build automation for the **Samsung Galaxy Note 9 
 - `local_manifests/crownlte.xml`: pinned Note 9 device tree, common tree, kernel, vendor files, and Samsung dependencies.
 - `scripts/verify-device-tree.sh`: validates expected source paths and product identifiers after sync.
 - `scripts/build-rom.sh`: runs the Lunaris lunch target and `m bacon`.
+- `scripts/build-from-github.sh`: one-command local source sync and ROM build.
 - `.github/workflows/build-rom.yml`: manual GitHub Actions build, logging, and ROM artifact upload.
 - `PORT_STATUS.md`: verified baseline and remaining bring-up work.
 - `RUNNER_SETUP.md`: the one-time runner prerequisite.
@@ -69,6 +70,16 @@ The local manifest pins these source repositories:
 | SLSI Linaro graphics | [android_hardware_samsung_slsi-linaro_graphics](https://github.com/ExyHyperBrick/android_hardware_samsung_slsi-linaro_graphics) | `lineage-21` |
 
 These branches are the published Exynos 9810 development baseline. They are not proof that every Android 16/Lunaris integration issue has been solved.
+
+## One-command local build
+
+After cloning this repository on a properly provisioned Linux build host, run:
+
+```bash
+bash scripts/build-from-github.sh
+```
+
+It installs the Repo launcher into your user bin directory if needed, checks Git LFS and host resources, syncs Lunaris plus the crownlte manifest, validates the device tree, and starts the build. The Android build host dependencies still need to be installed.
 
 ## Manual build commands
 
