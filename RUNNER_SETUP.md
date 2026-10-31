@@ -38,6 +38,6 @@ The registration token is short-lived and must be obtained from the repository's
 
 Once the runner is online, open **Actions → Build Lunaris — crownlte → Run workflow**. Leave `clean_out` disabled for incremental builds. Enable it only when a clean Android output directory is needed.
 
-A successful build uploads the generated ZIP as a workflow artifact for 14 days. Failed builds upload their log when one is available.
+A successful build publishes the ROM ZIP as a GitHub prerelease asset, along with SHA-256 checksums and build metadata. ZIPs larger than the GitHub per-file upload limit are split into numbered parts; download every part and run the included `join-rom-parts.sh` script to reassemble and verify the original ZIP. Diagnostic logs are uploaded as a workflow artifact for 7 days.
 
 The workflow does not flash the ROM to a phone and does not claim that a compile is a successful boot test.
