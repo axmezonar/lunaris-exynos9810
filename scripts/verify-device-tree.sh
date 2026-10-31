@@ -57,6 +57,15 @@ for path in "${required_dirs[@]}"; do
   fi
 done
 
+
+ANDROID_PRODUCTS="device/samsung/crownlte/AndroidProducts.mk"
+if [[ -f "$ANDROID_PRODUCTS" ]]; then
+  grep -q 'lineage_crownlte-user' "$ANDROID_PRODUCTS" || {
+    echo "ERROR: crownlte user lunch choice is not declared"
+    failed=1
+  }
+fi
+
 PRODUCT_MK="device/samsung/crownlte/lineage_crownlte.mk"
 BOARD_MK="device/samsung/crownlte/BoardConfig.mk"
 COMMON_BOARD="device/samsung/exynos9810-common/BoardConfigCommon.mk"
