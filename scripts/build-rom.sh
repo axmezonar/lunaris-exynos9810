@@ -19,7 +19,7 @@ bash "$ROOT/scripts/patch-lunaris-product.sh" "$ANDROID_ROOT"
 bash "$ROOT/scripts/verify-device-tree.sh" "$ANDROID_ROOT"
 
 source build/envsetup.sh
-lunch lineage_crownlte-bp4a-userdebug
+lunch lineage_crownlte-bp4a-user
 
 # Keep the full compiler output available for diagnosis.
 m bacon -j"$JOBS"
