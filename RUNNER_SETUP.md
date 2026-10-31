@@ -12,6 +12,16 @@ The repository and workflow are committed, but the GitHub Actions workflow requi
 
 GitHub standard hosted runners do not have enough local SSD or memory for a full Android source build. GitHub larger runners with 16 vCPU / 64 GB RAM / 600 GB SSD are an option only where the GitHub account/organization plan has access to larger runners and they are configured. See [GitHub larger runners](https://docs.github.com/en/actions/reference/runners/larger-runners).
 
+## Install the build dependencies
+
+Clone this repository on the Ubuntu 24.04 build machine, then run the included bootstrap script:
+
+```bash
+bash scripts/setup-ubuntu-runner.sh
+```
+
+It checks the OS, architecture, memory, and free disk before installing the required Ubuntu packages and preparing `/srv/android`. It does not register the GitHub runner or store any credentials.
+
 ## Register the runner
 
 In this repository:
