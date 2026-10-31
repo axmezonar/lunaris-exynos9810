@@ -10,7 +10,7 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: lunaris-crownlte-build
@@ -60,6 +60,7 @@ jobs:
           command -v git >/dev/null
           command -v python3 >/dev/null
           command -v curl >/dev/null
+          command -v unzip >/dev/null
           git lfs version
 
       - name: Install repo launcher
@@ -144,27 +145,121 @@ jobs:
 
           echo "ROM ZIP integrity and SHA-256 checks completed."
 
-      - name: Upload ROM artifacts
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Lunaris-AOSP-SM-N960F-run-${{ github.run_number }}
-          path: |
-            /srv/android/lunaris-exynos9810/out/target/product/crownlte/*.zip
-            SHA256SUMS
-            BUILD-INFO.txt
-            lunaris-crownlte-build.log
-            repo-sync.log
-          if-no-files-found: error
-          retention-days: 14
+      - name: Publish ROM as GitHub Release assets
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
 
-      - name: Upload diagnostics after failure
-        if: failure()
+          OUT="$ANDROID_ROOT/out/target/product/crownlte"
+          RELEASE_DIR="$GITHUB_WORKSPACE/release-assets"
+          mkdir -p "$RELEASE_DIR"
+
+          mapfile -t ROMS < <(find "$OUT" -maxdepth 1 -type f -name '*.zip' -size +1M -print | sort)
+          if (( ${#ROMS[@]} == 0 )); then
+            echo "::error::No ROM ZIP available for release publishing."
+            exit 1
+          fi
+
+          cp "$GITHUB_WORKSPACE/SHA256SUMS" "$RELEASE_DIR/SHA256SUMS"
+          cp "$GITHUB_WORKSPACE/BUILD-INFO.txt" "$RELEASE_DIR/BUILD-INFO.txt"
+          cp "$GITHUB_WORKSPACE/scripts/join-rom-parts.sh" "$RELEASE_DIR/join-rom-parts.sh"
+
+          {
+            echo "Lunaris AOSP 16.2 — Samsung Galaxy Note 9 Exynos (SM-N960F / crownlte)"
+            echo
+            echo "This is an experimental build. CI verifies ZIP integrity and SHA-256 only;"
+            echo "it does not flash the phone or confirm first boot and hardware functionality."
+            echo
+            echo "Download every asset for the ROM ZIP. If assets end in .part-000, .part-001, etc.,"
+            echo "download all parts plus SHA256SUMS and join-rom-parts.sh into one folder, then run:"
+            echo
+            echo '  bash join-rom-parts.sh "ROM_FILENAME.zip" .'
+            echo
+            echo "The join script verifies the reassembled ROM against SHA256SUMS."
+          } > "$RELEASE_DIR/DOWNLOAD-INSTRUCTIONS.txt"
+
+          # GitHub release assets have a per-file limit below 2 GiB.
+          # Split larger ROMs into 1800 MiB chunks; total release size is not capped.
+          for rom in "${ROMS[@]}"; do
+            base="$(basename "$rom")"
+            size="$(stat -c '%s' "$rom")"
+
+            if (( size > 1800000000 )); then
+              echo "Splitting $base ($size bytes) into upload-safe parts."
+              split -b 1800M --numeric-suffixes=0 --suffix-length=3 \
+                "$rom" "$RELEASE_DIR/$base.part-"
+            else
+              cp "$rom" "$RELEASE_DIR/$base"
+            fi
+          done
+
+          TAG="lunaris-crownlte-${GITHUB_RUN_ID}-attempt-${GITHUB_RUN_ATTEMPT}"
+          RELEASE_NAME="Lunaris AOSP 16.2 — SM-N960F build #${GITHUB_RUN_NUMBER}"
+
+          python3 - "$GITHUB_WORKSPACE/release-payload.json" "$TAG" "$RELEASE_NAME" "$GITHUB_SHA" <<'PY'
+          import json
+          import sys
+          path, tag, name, commit = sys.argv[1:]
+          body = (
+              "Experimental Lunaris AOSP 16.2 build for Samsung Galaxy Note 9 Exynos "
+              "SM-N960F (crownlte).\n\n"
+              "This release is a build output, not a claim of boot or hardware validation. "
+              "See BUILD-INFO.txt and DOWNLOAD-INSTRUCTIONS.txt."
+          )
+          with open(path, "w", encoding="utf-8") as stream:
+              json.dump({
+                  "tag_name": tag,
+                  "target_commitish": commit,
+                  "name": name,
+                  "body": body,
+                  "draft": False,
+                  "prerelease": True
+              }, stream)
+          PY
+
+          release_json="$(
+            curl --fail-with-body --silent --show-error \
+              -X POST \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              -H "Content-Type: application/json" \
+              --data-binary "@$GITHUB_WORKSPACE/release-payload.json" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
+          )"
+
+          release_id="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["id"])' <<< "$release_json")"
+          upload_url="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["upload_url"].split("{",1)[0])' <<< "$release_json")"
+          release_url="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["html_url"])' <<< "$release_json")"
+
+          for asset in "$RELEASE_DIR"/*; do
+            asset_name="$(basename "$asset")"
+            encoded_name="$(python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$asset_name")"
+            echo "Uploading $asset_name"
+            curl --fail-with-body --silent --show-error \
+              -X POST \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary "@$asset" \
+              "$upload_url?name=$encoded_name" >/dev/null
+          done
+
+          echo "Published ROM release: $release_url"
+          echo "ROM_RELEASE_URL=$release_url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload build diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Lunaris-AOSP-SM-N960F-failed-run-${{ github.run_number }}
+          name: Lunaris-AOSP-SM-N960F-diagnostics-${{ github.run_number }}
           path: |
             lunaris-crownlte-build.log
             repo-sync.log
+            BUILD-INFO.txt
+            SHA256SUMS
           if-no-files-found: ignore
           retention-days: 7
