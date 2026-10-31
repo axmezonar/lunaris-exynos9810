@@ -1,0 +1,85 @@
+name: Validate build configuration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Static validation (no Android compile)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate shell syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          for script in scripts/*.sh; do
+            echo "Checking $script"
+            bash -n "$script"
+          done
+
+      - name: Validate local manifest XML
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libxml2-utils
+          xmllint --noout local_manifests/crownlte.xml
+
+      - name: Validate pinned device repositories
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+
+          root = ET.parse("local_manifests/crownlte.xml").getroot()
+          remotes = {r.attrib["name"] for r in root.findall("remote")}
+          projects = root.findall("project")
+          paths = [p.attrib["path"] for p in projects]
+
+          assert len(paths) == len(set(paths)), "Duplicate project paths"
+          for project in projects:
+              assert project.attrib.get("remote") in remotes, (
+                  f"Undefined remote for {project.attrib.get('path')}"
+              )
+              assert project.attrib.get("revision"), (
+                  f"Unpinned project: {project.attrib.get('path')}"
+              )
+
+          expected = {
+              "device/samsung/crownlte",
+              "device/samsung/exynos9810-common",
+              "kernel/samsung/exynos9810",
+              "vendor/samsung/crownlte",
+              "vendor/samsung/exynos9810-common",
+              "hardware/samsung_slsi-linaro/config",
+              "hardware/samsung_slsi-linaro/exynos",
+              "hardware/samsung_slsi-linaro/exynos5",
+              "hardware/samsung_slsi-linaro/graphics",
+              "hardware/samsung_slsi-linaro/interfaces",
+              "hardware/samsung_slsi-linaro/openmax",
+          }
+          missing = expected.difference(paths)
+          assert not missing, f"Missing required manifest paths: {sorted(missing)}"
+
+          print(f"Validated {len(projects)} unique, explicitly pinned projects.")
+          PY
+
+      - name: Check target and build entrypoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'lunch lineage_crownlte-bp4a-user' scripts/build-rom.sh
+          grep -q 'm bacon' scripts/build-rom.sh
+          grep -q 'lineage_crownlte-user' <(curl -fsSL https://raw.githubusercontent.com/ExyHyperBrick/android_device_samsung_crownlte/lineage-23.2/AndroidProducts.mk)
