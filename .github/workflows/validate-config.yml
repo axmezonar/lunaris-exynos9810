@@ -53,9 +53,10 @@ jobs:
               assert project.attrib.get("remote") in remotes, (
                   f"Undefined remote for {project.attrib.get('path')}"
               )
-              assert project.attrib.get("revision"), (
-                  f"Unpinned project: {project.attrib.get('path')}"
-              )
+              revision = project.attrib.get("revision", "")
+              assert len(revision) == 40 and all(
+                  char in "0123456789abcdef" for char in revision
+              ), f"Project is not pinned to an immutable 40-character commit: {project.attrib.get('path')}"
 
           expected = {
               "device/samsung/crownlte",
