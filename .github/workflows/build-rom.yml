@@ -66,6 +66,7 @@ jobs:
           fi
           echo "$HOME/bin" >> "$GITHUB_PATH"
           git lfs version
+          git lfs install
 
       - name: Initialize Lunaris and sync crownlte sources
         shell: bash
