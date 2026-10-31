@@ -97,6 +97,8 @@ jobs:
             --no-clone-bundle \
             --no-tags 2>&1 | tee "$GITHUB_WORKSPACE/repo-sync.log"
 
+          repo manifest -r > "$GITHUB_WORKSPACE/pinned-source-manifest.xml"
+
       - name: Clean previous output if requested
         if: ${{ inputs.clean_out }}
         shell: bash
@@ -138,6 +140,7 @@ jobs:
             echo "Device tree baseline: LineageOS 23.2"
             echo "Build target: lineage_crownlte-bp4a-user"
             echo "Build configuration commit: $GITHUB_SHA"
+            echo "Resolved source manifest: pinned-source-manifest.xml (included in release assets)"
             echo "Build time (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo
             echo "Status: ZIP integrity verified; device boot and hardware testing are not performed by CI."
@@ -164,6 +167,7 @@ jobs:
 
           cp "$GITHUB_WORKSPACE/SHA256SUMS" "$RELEASE_DIR/SHA256SUMS"
           cp "$GITHUB_WORKSPACE/BUILD-INFO.txt" "$RELEASE_DIR/BUILD-INFO.txt"
+          cp "$GITHUB_WORKSPACE/pinned-source-manifest.xml" "$RELEASE_DIR/pinned-source-manifest.xml"
           cp "$GITHUB_WORKSPACE/scripts/join-rom-parts.sh" "$RELEASE_DIR/join-rom-parts.sh"
 
           {
@@ -259,6 +263,7 @@ jobs:
           path: |
             lunaris-crownlte-build.log
             repo-sync.log
+            pinned-source-manifest.xml
             BUILD-INFO.txt
             SHA256SUMS
           if-no-files-found: ignore
