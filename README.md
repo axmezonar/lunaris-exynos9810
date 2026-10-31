@@ -11,7 +11,7 @@ Unofficial device bring-up and build automation for the **Samsung Galaxy Note 9 
 | ROM source | [Lunaris AOSP](https://github.com/Lunaris-AOSP/android) |
 | ROM branch | `16.2` |
 | Device-tree base | LineageOS `lineage-23.2` generation |
-| Lunch target | `lineage_crownlte-bp4a-userdebug` |
+| Lunch target | `lineage_crownlte-bp4a-user` |
 
 > **Status: experimental bring-up.** The repository connects Lunaris 16.2 to the public Exynos 9810 device, kernel, vendor, and Samsung hardware sources. It has not yet been verified to compile, boot, or pass hardware testing. A successful source sync is not proof of a working ROM.
 
@@ -65,9 +65,9 @@ The local manifest pins these source repositories:
 | Common proprietary files | [proprietary_vendor_samsung_exynos9810-common](https://github.com/ExyHyperBrick/proprietary_vendor_samsung_exynos9810-common) | `lineage-23.2` |
 | Samsung hardware | [android_hardware_samsung](https://github.com/LineageOS/android_hardware_samsung) | `lineage-23.2` |
 | Samsung SLSI sepolicy | [android_device_samsung_slsi_sepolicy](https://github.com/LineageOS/android_device_samsung_slsi_sepolicy) | `lineage-23.2` |
-| SLSI Linaro config | [android_hardware_samsung_slsi-linaro_config](https://github.com/ExyHyperBrick/android_hardware_samsung_slsi-linaro_config) | `lineage-21` |
+| SLSI Linaro config | [android_hardware_samsung_slsi-linaro_config](https://github.com/ExyHyperBrick/android_hardware_samsung_slsi-linaro_config) | `lineage-22.2` |
 | SLSI Linaro Exynos | [android_hardware_samsung_slsi-linaro_exynos](https://github.com/ExyHyperBrick/android_hardware_samsung_slsi-linaro_exynos) | `lineage-23.2` |
-| SLSI Linaro graphics | [android_hardware_samsung_slsi-linaro_graphics](https://github.com/ExyHyperBrick/android_hardware_samsung_slsi-linaro_graphics) | `lineage-21` |
+| SLSI Linaro graphics | [android_hardware_samsung_slsi-linaro_graphics](https://github.com/ExyHyperBrick/android_hardware_samsung_slsi-linaro_graphics) | `lineage-22.2` |
 
 These branches are the published Exynos 9810 development baseline. They are not proof that every Android 16/Lunaris integration issue has been solved.
 
@@ -100,7 +100,7 @@ repo sync -c -j4 --force-sync --no-clone-bundle --no-tags
 bash <(curl -fsSL https://raw.githubusercontent.com/axmezonar/lunaris-exynos9810/main/scripts/verify-device-tree.sh) "$PWD"
 
 source build/envsetup.sh
-lunch lineage_crownlte-bp4a-userdebug
+lunch lineage_crownlte-bp4a-user
 m bacon -j8
 ```
 
