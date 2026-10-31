@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-    <!-- Use unique remotes: Lunaris already defines a remote named "github". -->
+    <!-- Unique remotes avoid shadowing the Lunaris core manifest's own remotes. -->
     <remote name="exyhyper" fetch="https://github.com/" />
     <remote name="lineageos" fetch="https://github.com/" />
 
@@ -50,7 +50,7 @@
         remote="lineageos"
         revision="lineage-23.2" />
 
-    <!-- Exynos SLSI Linaro build dependencies -->
+    <!-- The SLSI config.mk explicitly exports all five namespaces below. -->
     <project
         name="ExyHyperBrick/android_hardware_samsung_slsi-linaro_config"
         path="hardware/samsung_slsi-linaro/config"
@@ -64,8 +64,26 @@
         revision="lineage-23.2" />
 
     <project
+        name="LineageOS/android_hardware_samsung_slsi-linaro_exynos5"
+        path="hardware/samsung_slsi-linaro/exynos5"
+        remote="lineageos"
+        revision="lineage-23.2" />
+
+    <project
         name="ExyHyperBrick/android_hardware_samsung_slsi-linaro_graphics"
         path="hardware/samsung_slsi-linaro/graphics"
         remote="exyhyper"
         revision="lineage-21" />
+
+    <project
+        name="LineageOS/android_hardware_samsung_slsi-linaro_interfaces"
+        path="hardware/samsung_slsi-linaro/interfaces"
+        remote="lineageos"
+        revision="lineage-23.2" />
+
+    <project
+        name="LineageOS/android_hardware_samsung_slsi-linaro_openmax"
+        path="hardware/samsung_slsi-linaro/openmax"
+        remote="lineageos"
+        revision="lineage-23.2" />
 </manifest>
