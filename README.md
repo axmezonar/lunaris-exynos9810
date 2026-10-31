@@ -54,7 +54,9 @@ The workflow checks memory and disk before syncing. It uses `/srv/android/lunari
 
 ## Device source baseline
 
-The local manifest pins these source repositories:
+The local manifest resolves the Note 9 device, kernel, vendor, and SLSI repositories to immutable 40-character Git commit IDs. The branch names below identify the upstream compatibility baseline; the exact commits are recorded in `local_manifests/crownlte.xml` and the resolved full Android checkout is archived as `pinned-source-manifest.xml` with every successful ROM release.
+
+The local manifest uses these source repositories:
 
 | Component | Repository | Branch |
 |---|---|---|
@@ -97,11 +99,8 @@ curl -fsSL https://raw.githubusercontent.com/axmezonar/lunaris-exynos9810/main/l
 
 repo sync -c -j4 --force-sync --no-clone-bundle --no-tags
 
-bash <(curl -fsSL https://raw.githubusercontent.com/axmezonar/lunaris-exynos9810/main/scripts/verify-device-tree.sh) "$PWD"
-
-source build/envsetup.sh
-lunch lineage_crownlte-bp4a-user
-m bacon -j8
+# From the cloned lunaris-exynos9810 repository:
+bash scripts/build-rom.sh
 ```
 
 Expected output directory: `out/target/product/crownlte/`. Lunaris determines the exact ZIP filename.
