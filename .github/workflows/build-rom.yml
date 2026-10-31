@@ -30,6 +30,8 @@ jobs:
     steps:
       - name: Checkout build configuration
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Check build host resources
         shell: bash
@@ -51,9 +53,14 @@ jobs:
           fi
 
           if (( free_gib < 450 )); then
-            echo "::error::At least 450 GiB free disk is required for source and output."
+            echo "::error::At least 450 GiB free disk is required before sync."
             exit 1
           fi
+
+          command -v git >/dev/null
+          command -v python3 >/dev/null
+          command -v curl >/dev/null
+          git lfs version
 
       - name: Install repo launcher
         shell: bash
@@ -65,7 +72,6 @@ jobs:
             chmod 0755 "$HOME/bin/repo"
           fi
           echo "$HOME/bin" >> "$GITHUB_PATH"
-          git lfs version
           git lfs install
 
       - name: Initialize Lunaris and sync crownlte sources
@@ -88,7 +94,7 @@ jobs:
             -j"$REPO_SYNC_JOBS" \
             --force-sync \
             --no-clone-bundle \
-            --no-tags
+            --no-tags 2>&1 | tee "$GITHUB_WORKSPACE/repo-sync.log"
 
       - name: Clean previous output if requested
         if: ${{ inputs.clean_out }}
@@ -100,25 +106,65 @@ jobs:
         run: |
           set -Eeuo pipefail
           cd "$ANDROID_ROOT"
-          LOG="$GITHUB_WORKSPACE/lunaris-crownlte-build.log"
-          bash "$GITHUB_WORKSPACE/scripts/build-rom.sh" 2>&1 | tee "$LOG"
+          bash "$GITHUB_WORKSPACE/scripts/build-rom.sh" 2>&1 | tee "$GITHUB_WORKSPACE/lunaris-crownlte-build.log"
 
-      - name: Upload ROM artifact
+      - name: Verify ROM ZIP and generate checksums
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          OUT="$ANDROID_ROOT/out/target/product/crownlte"
+          mapfile -t ROMS < <(find "$OUT" -maxdepth 1 -type f -name '*.zip' -size +1M -print | sort)
+
+          if (( ${#ROMS[@]} == 0 )); then
+            echo "::error::No non-empty ROM ZIP found in $OUT"
+            exit 1
+          fi
+
+          : > "$GITHUB_WORKSPACE/SHA256SUMS"
+          for rom in "${ROMS[@]}"; do
+            echo "Checking $(basename "$rom")"
+            unzip -tq "$rom"
+            sha256sum "$rom" | awk -v name="$(basename "$rom")" '{print $1 "  " name}' >> "$GITHUB_WORKSPACE/SHA256SUMS"
+          done
+
+          {
+            echo "ROM: Lunaris AOSP"
+            echo "Device: Samsung Galaxy Note 9 Exynos"
+            echo "Model: SM-N960F"
+            echo "Codename: crownlte"
+            echo "Android branch: 16.2"
+            echo "Device tree baseline: LineageOS 23.2"
+            echo "Build target: lineage_crownlte-bp4a-userdebug"
+            echo "Build configuration commit: $GITHUB_SHA"
+            echo "Build time (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo
+            echo "Status: ZIP integrity verified; device boot and hardware testing are not performed by CI."
+          } > "$GITHUB_WORKSPACE/BUILD-INFO.txt"
+
+          echo "ROM ZIP integrity and SHA-256 checks completed."
+
+      - name: Upload ROM artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Lunaris-AOSP-SM-N960F-run-${{ github.run_number }}
           path: |
             /srv/android/lunaris-exynos9810/out/target/product/crownlte/*.zip
+            SHA256SUMS
+            BUILD-INFO.txt
             lunaris-crownlte-build.log
+            repo-sync.log
           if-no-files-found: error
           retention-days: 14
 
-      - name: Upload build log after failure
+      - name: Upload diagnostics after failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: Lunaris-AOSP-SM-N960F-failed-log-${{ github.run_number }}
-          path: lunaris-crownlte-build.log
+          name: Lunaris-AOSP-SM-N960F-failed-run-${{ github.run_number }}
+          path: |
+            lunaris-crownlte-build.log
+            repo-sync.log
           if-no-files-found: ignore
           retention-days: 7
