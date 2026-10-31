@@ -19,9 +19,10 @@ if ! command -v repo >/dev/null 2>&1; then
 fi
 
 if ! git lfs version >/dev/null 2>&1; then
-  echo "Git LFS is required. Install git-lfs and run 'git lfs install' first." >&2
+  echo "Git LFS is required. Install git-lfs first." >&2
   exit 1
 fi
+git lfs install
 
 mkdir -p "$ANDROID_ROOT"
 mem_kb="$(awk '/MemTotal:/ {print $2}' /proc/meminfo)"
