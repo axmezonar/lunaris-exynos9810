@@ -136,7 +136,7 @@ jobs:
             echo "Codename: crownlte"
             echo "Android branch: 16.2"
             echo "Device tree baseline: LineageOS 23.2"
-            echo "Build target: lineage_crownlte-bp4a-userdebug"
+            echo "Build target: lineage_crownlte-bp4a-user"
             echo "Build configuration commit: $GITHUB_SHA"
             echo "Build time (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo
