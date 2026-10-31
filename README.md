@@ -85,22 +85,21 @@ It installs the Repo launcher into your user bin directory if needed, checks Git
 
 ## Manual build commands
 
-On a properly provisioned Linux build host:
+On a properly provisioned Linux build host, clone the build configuration repository separately from the Android source checkout:
 
 ```bash
-mkdir -p ~/android/lunaris-crownlte
-cd ~/android/lunaris-crownlte
+git clone https://github.com/axmezonar/lunaris-exynos9810.git ~/lunaris-exynos9810
+cd ~/lunaris-exynos9810
 
-repo init -u https://github.com/Lunaris-AOSP/android -b 16.2 --git-lfs
+# Sync Lunaris source and compile the Note 9 target:
+bash scripts/build-from-github.sh
+```
 
-mkdir -p .repo/local_manifests
-curl -fsSL https://raw.githubusercontent.com/axmezonar/lunaris-exynos9810/main/local_manifests/crownlte.xml \
-  -o .repo/local_manifests/crownlte.xml
+To use a custom Android source location:
 
-repo sync -c -j4 --force-sync --no-clone-bundle --no-tags
-
-# From the cloned lunaris-exynos9810 repository:
-bash scripts/build-rom.sh
+```bash
+ANDROID_ROOT="$HOME/android/lunaris-crownlte" \
+  bash ~/lunaris-exynos9810/scripts/build-from-github.sh
 ```
 
 Expected output directory: `out/target/product/crownlte/`. Lunaris determines the exact ZIP filename.
